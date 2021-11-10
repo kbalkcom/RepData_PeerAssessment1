@@ -172,7 +172,7 @@ The new mean calculated with the imputed values was **`r mean_steps_nomis`** tha
 
 The plot below indicates that activity between approximately 10 am and 8 pm (1000 to 2000) was greater on the weekend compared to weekdays.  However, based on a visual inspection, the period from approximately 8 am to 10 pm (800 to 1000) was greater for the weekdays compared to the weekend.
 
-Note:  This plot is not showing up in the rendered document, but is listed in the figures folder.  I can't find any explanation as to why the plot is not showing up.  it shows up in the code chunk, but not the rendered document.
+Note:  This plot is not showing up in the rendered document, but is listed in the figures folder.  I can't find any explanation as to why the plot is not showing up.  The figure shows up below the code chunk, but not in the final rendered document.
 
 
 ```{r Weekday and Weekend Plot}

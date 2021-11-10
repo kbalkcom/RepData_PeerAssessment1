@@ -16,8 +16,41 @@ The data is read in and no initial formatting was performed.  Two packages were 
 
 ```r
 library(tidyverse)
-library(lubridate)
+```
 
+```
+## ── Attaching packages ─────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
+```
+
+```
+## ✓ ggplot2 3.3.1     ✓ purrr   0.3.4
+## ✓ tibble  3.0.1     ✓ dplyr   1.0.0
+## ✓ tidyr   1.1.0     ✓ stringr 1.4.0
+## ✓ readr   1.3.1     ✓ forcats 0.5.0
+```
+
+```
+## ── Conflicts ────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+```
+
+```r
+library(lubridate)
+```
+
+```
+## 
+## Attaching package: 'lubridate'
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     date, intersect, setdiff, union
+```
+
+```r
 data <- read_csv("activity.csv")
 ```
 
@@ -191,7 +224,7 @@ The new mean calculated with the imputed values was **10766.1886792** that was e
 
 The plot below indicates that activity between approximately 10 am and 8 pm (1000 to 2000) was greater on the weekend compared to weekdays.  However, based on a visual inspection, the period from approximately 8 am to 10 pm (800 to 1000) was greater for the weekdays compared to the weekend.
 
-Note:  This plot is not showing up in the rendered document, but is listed in the figures folder.  I can't find any explanation as to why the plot is not showing up.  it shows up in the code chunk, but not the rendered document.
+Note:  This plot is not showing up in the rendered document, but is listed in the figures folder.  I can't find any explanation as to why the plot is not showing up.  The figure shows up below the code chunk, but not in the final rendered document.
 
 
 
