@@ -1,0 +1,197 @@
+---
+title: "Fitbit Report"
+author: "Kip Balkcom"
+date: "11/8/2021"
+output: 
+  html_document:
+    keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999) # suppresses scientific notation in inline text outputs
+```
+
+## Load the data
+
+The data is read in and no initial formatting was performed.  Two packages were loaded to help with processing this data.  The tidyverse was used as much as possible for this report instead of base R commands.
+
+```{r data}
+
+library(tidyverse)
+library(lubridate)
+
+data <- read_csv("activity.csv")
+
+```
+
+## What are the total number, mean number, and median number of steps taken per day?
+
+### Total number of steps per day
+
+The tibble below contains the total number of steps taken for each day. 
+
+```{r steps per day} 
+
+steps_day <- data %>%
+  drop_na() %>% 
+  group_by(date) %>%
+  summarize(totalsteps_day = sum(steps), .groups = "drop")
+
+steps_day
+
+```
+
+
+### Histogram
+
+The histogram below provides a graphical representation of the total number of steps taken for each day.  
+
+```{r Histogram-missing values}
+
+steps_day %>% 
+    ggplot(., aes(x = totalsteps_day)) +
+    geom_histogram(binwidth = 1000)
+
+```
+### Mean and median for total steps per day
+
+```{r mean and median}
+
+mean_steps <- steps_day %>% 
+  summarize(meansteps_day = mean(totalsteps_day), .groups = "drop") %>% 
+  pull(meansteps_day)
+
+median_steps <- steps_day %>% 
+  summarize(mediansteps_day = median(totalsteps_day), .groups = "drop") %>% 
+  pull(mediansteps_day)
+
+```
+
+The mean for the total number of steps taken per day was **`r mean_steps`** and the median was **`r median_steps`**.
+
+
+
+## Average daily activity pattern
+
+The time-series plot was developed from the original data file.  All missing values were dropped and means for steps per day were calculated for each interval.    
+
+```{r Time-series plot}
+
+time_series_plot <- data %>%
+  drop_na() %>% 
+  group_by(interval) %>% 
+  summarize(meansteps_day = mean(steps), .groups = "drop") %>% 
+  ggplot(., aes(x=interval, y=meansteps_day)) +
+  geom_line() +
+  scale_x_continuous(limits = c(0, 2450))
+
+time_series_plot
+
+```
+
+```{r maxinterval}
+
+maxinterval <- data %>%
+  drop_na() %>% 
+  group_by(interval) %>% 
+  summarize(meansteps_day = mean(steps), .groups = "drop") %>% 
+  filter(meansteps_day == max(meansteps_day)) %>% 
+  pull(interval)
+
+```
+
+
+On average across all the days in the dataset, the time interval of **`r maxinterval`** contains the maximum number of steps.  This corresponds to the approximate location on the time-series plot where the peak occurs as shown above.
+
+
+
+## Impute missing values
+
+```{r impute}
+missing_values <- data %>% 
+  summarise(missing = sum(is.na(steps))) %>% 
+  mutate(missing = as.double(missing)) %>% 
+  pull(missing)
+
+meaninterval <- data %>%
+  drop_na() %>% 
+  group_by(interval) %>% 
+  summarize(meansteps_day = mean(steps), .groups = "drop")
+
+data_nomis <- data %>% 
+  inner_join(meaninterval, by = "interval") %>% 
+  mutate(steps = if_else(is.na(steps), meansteps_day, steps)) %>% 
+  select(-meansteps_day)
+
+
+
+```
+
+The total number of missing values in the dataset (i.e. the total number of rows with NAs) corresponded to **`r missing_values`** rows.
+
+The strategy used to replace the missing values in the dataset was to use the mean for the 5-minute intervals averaged over all the days, which was calculated previously.  This dataset was joined with the original dataset with an inner join, and the missing values were replaced with the corresponding 5-minute interval mean.  The meansteps_day column was deleted from the dataset.
+
+
+### New histogram
+
+Based on the histogram, counts have increased for some of the totalsteps_day when imputed missing values were included.  
+
+```{r Histogram-imputed values}
+
+steps_day_nomis <- data_nomis %>%
+  group_by(date) %>% 
+  summarize(totalsteps_day = sum(steps), .groups = "drop")
+
+
+steps_day_nomis %>% 
+  ggplot(., aes(x = totalsteps_day)) +
+    geom_histogram(binwidth = 1000)
+
+```
+
+### New mean and median with imputed values
+
+```{r imputed mean and median}
+
+mean_steps_nomis <- steps_day_nomis %>% 
+  summarize(meansteps_day = mean(totalsteps_day), .groups = "drop") %>% 
+  pull(meansteps_day)
+
+median_steps_nomis <- steps_day_nomis %>% 
+  summarize(mediansteps_day = median(totalsteps_day), .groups = "drop") %>% 
+  pull(mediansteps_day)
+
+```
+
+The new mean calculated with the imputed values was **`r mean_steps_nomis`** that was equivalent to the mean calculated previously by eliminating the missing values. The median calcuated with the imputed values was **`r median_steps_nomis`**.  Although not exact, this median was essentially the same as the median calculated with the missing values removed from the dataset.  However, the imputed median is equal to the imputed mean.
+
+
+
+## Weekdays vs. Weekends
+
+The plot below indicates that activity between approximately 10 am and 8 pm (1000 to 2000) was greater on the weekend compared to weekdays.  However, based on a visual inspection, the period from approximately 8 am to 10 pm (800 to 1000) was greater for the weekdays compared to the weekend.
+
+Note:  This plot is not showing up in the rendered document, but is listed in the figures folder.  I can't find any explanation as to why the plot is not showing up.  it shows up in the code chunk, but not the rendered document.
+
+
+```{r Weekday and Weekend Plot}
+
+days_classified <- data_nomis %>% 
+  mutate(day_name = wday(date, label=TRUE)) %>% 
+  mutate(type_of_day = if_else(day_name == "Sat" |
+                                day_name == "Sun", "weekend", "weekday")) %>% 
+  group_by(interval, type_of_day) %>% 
+  summarize(meansteps_day = mean(steps), .groups = "drop") %>% 
+  ggplot(., aes(x=interval, y=meansteps_day)) +
+  geom_line() +
+  facet_wrap(~type_of_day, nrow = 2) +
+  scale_x_continuous(limits = c(0, 2450))
+
+days_classified
+
+
+```
+
+
+
